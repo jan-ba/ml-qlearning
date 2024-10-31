@@ -106,7 +106,7 @@ def run_game(nb_episodes, agent):
 def train(nb_episodes, agent):
     reward_values = agent.reward_values()
     
-    env = PLE(FlappyBird(), fps=30, display_screen=True, force_fps=False, rng=None,
+    env = PLE(FlappyBird(), fps=30, display_screen=False, force_fps=True, rng=None,
             reward_values = reward_values)
     env.init()
 
@@ -119,6 +119,7 @@ def train(nb_episodes, agent):
         # step the environment
         reward = env.act(env.getActionSet()[action])
         print("reward=%d" % reward)
+        print("episode left: ", nb_episodes)
 
         # let the agent observe the current state transition
         newState = env.game.getGameState()
@@ -138,7 +139,7 @@ def train(nb_episodes, agent):
 class FlappyAgentQ1(FlappyAgent):
     def __init__(self):
         super().__init__()
-        # DISCOUNT_RATE_GAMMA = 0.9
+        self.DISCOUNT_RATE_GAMMA = 1
         self.LEARNING_RATE_ALPHA = 0.1
         self.E_GREEDY_EPSILON = 0.1
         self.num_intervals = 15
@@ -146,7 +147,7 @@ class FlappyAgentQ1(FlappyAgent):
         self.pixels_x = 288
         self.velocity_max = 10
         self.velocity_min = -8
-        self.q_table = dict([((player_int, next_pipe_int, dist_int, vel), 0) for player_int in\
+        self.q_table = dict([((player_int, next_pipe_int, dist_int, vel), [0, 0]) for player_int in\
                              range(self.num_intervals) for next_pipe_int in range(self.num_intervals) for dist_int in\
                                   range(self.num_intervals) for vel in range(self.velocity_min, self.velocity_max + 1)])
       
@@ -191,9 +192,7 @@ class FlappyAgentQ1(FlappyAgent):
         binned_player_vel = int(clamped_state["player_vel"])
 
         binned_player_y = int(clamped_state["player_y"] / (self.pixels_y / (self.num_intervals - 1)))
-        print("DICT: ", clamped_state["next_pipe_dist_to_player"])
         binned_x_dist_next = int(clamped_state["next_pipe_dist_to_player"] / (self.pixels_x / (self.num_intervals  - 1)))
-        print("BINNED: ", (clamped_state["next_pipe_dist_to_player"] / (self.pixels_x / (self.num_intervals  - 1))))
         binned_y_top_next = int(clamped_state["next_pipe_top_y"] / (self.pixels_y / (self.num_intervals - 1)))
 
         binned_y_bottom_next = int(clamped_state["next_pipe_bottom_y"] / (self.pixels_y / (self.num_intervals - 1)))
@@ -206,9 +205,10 @@ class FlappyAgentQ1(FlappyAgent):
                          next_pipe_top_y=binned_y_top_next, next_pipe_bottom_y=binned_y_bottom_next,\
                          next_next_pipe_dist_to_player=binned_x_dist_next_next, next_next_pipe_top_y=binned_y_top_next_next,\
                             next_next_pipe_bottom_y=binned_y_bottom_next_next)
-        
-        
 
+    def get_q_table_key(self, state: GameState):
+        bins = self.get_binned_state(state)
+        return (bins["player_y"], bins["next_pipe_top_y"], bins["next_pipe_dist_to_player"], bins["player_vel"])
 
     def observe(self, s1, a, r, s2, end):
         """ this function is called during training on each step of the game where
@@ -219,7 +219,10 @@ class FlappyAgentQ1(FlappyAgent):
             subsequent steps in the same episode. That is, s1 in the second call will be s2
             from the first call.
             """
-        # TODO: learn from the observation
+        key_s1 = self.get_q_table_key(s1)
+        key_s2 = self.get_q_table_key(s2)
+        self.q_table[key_s1][a] = self.q_table[key_s1][a] + self.LEARNING_RATE_ALPHA * (r + self.DISCOUNT_RATE_GAMMA *\
+            max(self.q_table[key_s2]) - self.q_table[key_s1][a])
         return
 
     def training_policy(self, state):
@@ -228,12 +231,13 @@ class FlappyAgentQ1(FlappyAgent):
 
             training_policy is called once per frame in the game while training
         """
-        print("state: %s" % state)
-        bins = self.get_binned_state(state)
+        # print("state: %s" % state)
         if np.random.uniform(0, 1) > self.E_GREEDY_EPSILON:
-            return self.q_table[bins["player_y"], bins["next_pipe_top_y"], bins["next_pipe_dist_to_player"], bins["player_vel"]]    
+            actions = self.q_table[self.get_q_table_key(state)]
+            # print("Greedy: ", actions)
+            return 0 if actions[0] >= actions[1] else 1
         else:
-            return random.randint(0,1)
+            return random.randint(0, 1)
 
     def policy(self, state):
         """ Returns the index of the action that should be done in state when training is completed.
@@ -253,44 +257,12 @@ class FlappyAgentQ1(FlappyAgent):
         next next pipe bottom y position
         """
         print(f"state: {state}")
-        bins = self.get_binned_state(state)
-        return self.q_table[bins["player_y"], bins["next_pipe_top_y"], bins["next_pipe_dist_to_player"], bins["player_vel"]]    
+        actions = self.q_table[self.get_q_table_key(state)]
+        return 0 if actions[0] >= actions[1] else 1
 
-def run_game(nb_episodes, agent):
-    """ Runs nb_episodes episodes of the game with agent picking the moves.
-        An episode of FlappyBird ends with the bird crashing into a pipe or going off screen.
-    """
-
-    reward_values = {"positive": 1.0, "negative": 0.0, "tick": 0.0, "loss": 0.0, "win": 0.0}
-    # TODO: when training use the following instead:
-    # reward_values = agent.reward_values
-    
-    env = PLE(FlappyBird(), fps=30, display_screen=True, force_fps=False, rng=None,
-            reward_values = reward_values)
-    # TODO: to speed up training change parameters of PLE as follows:
-    # display_screen=False, force_fps=True 
-    env.init()
-
-    score = 0
-    while nb_episodes > 0:
-        # pick an action
-        # TODO: for training using agent.training_policy instead
-        action = agent.policy(env.game.getGameState())
-
-        # step the environment
-        reward = env.act(env.getActionSet()[action])
-        print("reward=%d" % reward)
-
-        # TODO: for training let the agent observe the current state transition
-
-        score += reward
-        
-        # reset the environment if the game is over
-        if env.game_over():
-            print("score for this episode: %d" % score)
-            env.reset_game()
-            nb_episodes -= 1
-            score = 0
 
 agent = FlappyAgentQ1()
-train(1000, agent)
+input("Press any button to start training")
+train(2000, agent)
+input("Press any button to resume to playing (training mode off)")
+run_game(10, agent)
