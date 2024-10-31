@@ -133,10 +133,8 @@ def train(nb_episodes, agent):
             nb_episodes -= 1
             score = 0
 
-# agent = FlappyAgent()
-# train(1, agent)
 
-class FlappyAgentQ1(FlappyAgent):
+class FlappyAgentV1(FlappyAgent):
     def __init__(self):
         super().__init__()
         self.DISCOUNT_RATE_GAMMA = 1
@@ -151,21 +149,6 @@ class FlappyAgentQ1(FlappyAgent):
                              range(self.num_intervals) for next_pipe_int in range(self.num_intervals) for dist_int in\
                                   range(self.num_intervals) for vel in range(self.velocity_min, self.velocity_max + 1)])
       
-    
-    def parse_state_to_discrete(self, state: GameState) -> tuple[int]:
-        return self.get_discrete_state(state)
-        
-        ''' "player_y": self.player.pos_y,
-            "player_vel": self.player.vel,
-
-            "next_pipe_dist_to_player": next_pipe.x + next_pipe.width/2 - self.player.pos_x ,
-            "next_pipe_top_y": next_pipe.gap_start,
-            "next_pipe_bottom_y": next_pipe.gap_start + self.pipe_gap,
-
-            "next_next_pipe_dist_to_player": next_next_pipe.x + next_next_pipe.width/2 - self.player.pos_x ,
-            "next_next_pipe_top_y": next_next_pipe.gap_start,
-            "next_next_pipe_bottom_y": next_next_pipe.gap_start + self.pipe_gap
-        '''
     
     def clamp_state(self, state):
 
@@ -261,8 +244,11 @@ class FlappyAgentQ1(FlappyAgent):
         return 0 if actions[0] >= actions[1] else 1
 
 
-agent = FlappyAgentQ1()
-input("Press any button to start training")
-train(2000, agent)
-input("Press any button to resume to playing (training mode off)")
-run_game(10, agent)
+# if __name__ == "__main__":
+# 
+    # agent = FlappyAgentV1()
+    # input("Press any button to start training")
+    # train(40000, agent)
+    # input("Press any button to resume to playing (training mode off)")
+    # run_game(10, agent)
+
