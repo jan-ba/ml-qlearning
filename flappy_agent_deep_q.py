@@ -7,6 +7,8 @@ from typing import TypedDict
 from sklearn.neural_network import MLPRegressor
 from flappy_agent import FlappyAgent, GameState
 from copy import deepcopy
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 # Lecture 17, slide 38 for deep q learning
 
@@ -14,38 +16,33 @@ def run_game(nb_episodes, agent):
     """ Runs nb_episodes episodes of the game with agent picking the moves.
         An episode of FlappyBird ends with the bird crashing into a pipe or going off screen.
     """
-
+    total_rewards_for_each_episodes = []
     reward_values = {"positive": 1.0, "negative": -1.0, "tick": -0.01, "loss": -5.0, "win": 10.0}
-
-    # TODO: when training use the following instead:
-    # reward_values = agent.reward_values
     
-    env = PLE(FlappyBird(), fps=30, display_screen=True, force_fps=False, rng=None,
+    env = PLE(FlappyBird(), fps=30, display_screen=False, force_fps=True, rng=None,
             reward_values = reward_values)
-    # TODO: to speed up training change parameters of PLE as follows:
-    # display_screen=False, force_fps=True 
     env.init()
 
     score = 0
     while nb_episodes > 0:
-        # pick an action
-        # TODO: for training using agent.training_policy instead
+        # pick greedy action
         action = agent.policy(env.game.getGameState())
 
         # step the environment
         reward = env.act(env.getActionSet()[action])
         print("reward=%d" % reward)
 
-        # TODO: for training let the agent observe the current state transition
-
         score += reward
         
         # reset the environment if the game is over
         if env.game_over():
             print("score for this episode: %d" % score)
+            total_rewards_for_each_episodes.append(score)
             env.reset_game()
             nb_episodes -= 1
             score = 0
+    
+    return total_rewards_for_each_episodes
 
 def train(nb_episodes, agent):
     reward_values = agent.reward_values()
@@ -55,6 +52,7 @@ def train(nb_episodes, agent):
     env.init()
 
     score = 0
+    episode_rewards = []
     while nb_episodes > 0:
         # pick an action
         state = env.game.getGameState()
@@ -74,10 +72,11 @@ def train(nb_episodes, agent):
         # reset the environment if the game is over
         if env.game_over():
             print("score for this episode: %d" % score)
+            episode_rewards.append(score)
             env.reset_game()
             nb_episodes -= 1
             score = 0
-
+    return episode_rewards
 
 class FlappyAgentV2(FlappyAgent):
     def __init__(self):
@@ -91,8 +90,10 @@ class FlappyAgentV2(FlappyAgent):
         # Hyperparameters
         self.DISCOUNT_RATE_GAMMA = 0.99         # Keep gamma < 1, otherwise it will only favor immediate rewards
         self.INIT_LEARNING_RATE_ALPHA = 0.001   # Lower learning rate to avoid jumping over global minima
-        self.E_GREEDY_EPSILON = 0.1             # Consider starting 0.9 and use epsilon decay that decays epsilon every n amount of frames
+        self.E_GREEDY_EPSILON = 0.9             # Consider starting 0.9 and use epsilon decay that decays epsilon every n amount of frames
         self.MIN_EPSILON = 0.01                 # Have a minimum epsilon
+        self.EPSILON_DECAY_RATE = 0.05          # value that is subtracted from epsilon for every decay step
+        self.EPSILON_DECAY_STEP = 100           # number of frames after which to decrease epsilon
         self.REPLAY_BUFFER_SIZE = 1000
         self.BATCH_SIZE = 64                    # Use a number that is a power of 2 because the CPU handles binaries faster
         self.MODEL_UPDATE_STEP = 100
@@ -148,9 +149,6 @@ class FlappyAgentV2(FlappyAgent):
         x_dist_next_next = 2 * x_dist_next_next / self.pixels_x - 1
         y_top_next_next = 2 * y_top_next_next / self.pixels_y - 1
         y_bottom_next_next = 2 * y_bottom_next_next / self.pixels_y - 1
-        # return GameState(player_vel=vel, player_y=player_y, next_pipe_dist_to_player=x_dist_next, next_pipe_top_y=y_top_next,\
-        #                  next_pipe_bottom_y=y_bottom_next, next_next_pipe_dist_to_player=x_dist_next_next,\
-        #                     next_next_pipe_top_y=y_top_next_next, next_next_pipe_bottom_y=y_bottom_next_next)
 
         return (vel, player_y, x_dist_next, y_top_next, y_bottom_next, x_dist_next_next, y_top_next_next, y_bottom_next_next)
 
@@ -246,9 +244,29 @@ class FlappyAgentV2(FlappyAgent):
         self.target_model.intercepts_ = deepcopy(self.model.intercepts_)
 
 
+if __name__ == "__main__":
+    agent = FlappyAgentV2()
+    total_score = []
+    iteration = 2000
+    for i in range(10):
+        train(iteration, agent)
+        scores = run_game(100, agent)
+        total_score.append(scores)
 
-agent = FlappyAgentV2()
-train(2000, agent)
-input("Press any button to resume to playing (training mode off)")
-run_game(100, agent)
+    average_scores = []
+    runs = 0
+    for scores in total_score:
+        average_scores.append(sum(scores)/len(scores))
+        runs +=iteration
+
+
+    sns.set(style="darkgrid")
+    plt.figure(figsize=(12, 6))
+    sns.lineplot(x=runs, y=average_scores)
+    plt.xlabel("Run")
+    plt.ylabel(f"Average Reward per {iteration}")
+    plt.title('Learning Curve of Flappy Bird Agent')
+    plt.show()
+    input("Press any button to resume to playing (training mode off)")
+    run_game(100, agent)
 
