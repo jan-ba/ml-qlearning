@@ -244,11 +244,10 @@ class FlappyAgentV1(FlappyAgent):
         return 0 if actions[0] >= actions[1] else 1
 
 
-# if __name__ == "__main__":
-# 
-    # agent = FlappyAgentV1()
-    # input("Press any button to start training")
-    # train(40000, agent)
-    # input("Press any button to resume to playing (training mode off)")
-    # run_game(10, agent)
+if __name__ == "__main__":
+
+    agent = FlappyAgentV1()
+    train(1000, agent)
+    input("Press any button to resume to playing (training mode off)")
+    run_game(10, agent)
 
