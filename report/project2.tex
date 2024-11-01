@@ -15,6 +15,7 @@
 \usepackage{caption} % For customising captions
 
 
+
 % Set the caption font size
 \captionsetup{font=small}
 
@@ -24,7 +25,7 @@
 \geometry{a4paper, left=25mm, right=25mm, top=25mm, bottom=25mm}
 \title{Project 2: Reinforcement Learning - Q-Learning and Deep Q-Learning}
 
-\author{Alexander Svarfdal Gudmundsson \and Jan Babin}
+\author{Alexander Svarfdal Gudmundsson and Jan Babin}
 \date{\today}
 
 \begin{document}
@@ -64,13 +65,13 @@ The environment techniqually is \textit{continuous} since for example the veloci
 could be represented by float values. In practise, it is probably both \textit{discrete} and \textit{finite} as for the bird's position we can consider a 
 integer grid of pixels and the velocity may only take values from a countable and finite set of float values. Furthermore, the agent
 may only choose from two possible actions for every state: to flap or not to flap - that is the question.
-
+\\
 The game is largely deterministic, with the bird's movements being accurately predictable as well as the pipes' behaviour once they have
 appeard.
 However, there is obviously some \textit{stochasticity} involved in their generation: 
 The location of newly spawned pipes is random. Still, one could argue
 this does not make it stochastic from the agents point of view, but more about that in the following sections.
-
+\\
 FlappyBirds is an episodic game: An episode starts with the bird alive and ends once it dies. Starting another iteration is independent
 of the last one.
 For an agent, to make informed decisions a state of FlappyBirds should contain the position and velocity of the bird as well as the distance to
@@ -155,22 +156,52 @@ Q-Learning is quicker to train when only accessing CPU-power.
     \item \textbf{Learning rate}: Hyperparameter that controls how much value the agent treats our new information in contrast to the old Q-value in the table 
     \item \textbf{Greedy epsilon}: This controls how much we exploit vs explore, can be from 0 to 1, the higher the epsilon the more we explore 
 \end{itemize}
-For the hyperparameter tuning we use random grid search to find the best combination of the parameters for the depp-q agent.
+For the hyperparameter tuning, we use random grid search to find the best combination of the parameters for the Deep Q-Learning agent. We randomly tried 20 different
+hyperparameter combinations and trained each of the corresponding models on 2000 episodes.
 
 \subsection{Best Performing Agent}
-Report on the best results obtained and analyze why this setup was effective.
+\begin{table}[h]
+    \centering
+    \caption{Best Hyperparameter Combination for Q-learning}
+    \begin{tabular}{|c|c|}
+        \hline
+        Hyperparameter & Value \\
+        \hline
+        Discount Rate (\(\gamma\)) & 0.950 \\
+        \hline
+        Learning Rate (\(\alpha\)) & 0.096 \\
+        \hline
+        Exploration Rate (\(\epsilon\)) & 0.014 \\
+        \hline
+    \end{tabular}
+    \label{tab:best_hyperparams}
+\end{table}
 
-\section{Conclusion}
-Summarize the findings of the project, the parameters that influenced learning the most, and potential future improvements.
+The best combination of hyperparameters we could find is shown in Table \ref{tab:best_hyperparams}. We then initialized a 
+new agent with these settings and also an agent with default settings and trained both for 3000 episodes. The tuned agent 
+performed significantly better (see Figure \ref{fig:comparison.png}). After that, we trained our best agent for 10000 episodes, 
+tracking the progress by plotting the learning curve as can be seen in Figure \ref{fig:learning_curve_best}.
 
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=\textwidth]{training_deepq_vs_q_avg10samples.png}
+%     \caption{Comparison between average scores of 10 games between the tuned and the untuned agent.}
+%     \label{fig:comparison.png}
+% \end{figure}
 
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=\textwidth]{training_deepq_vs_q_avg10samples.png}
+%     \caption{Learning curve of best tuned model on 10000 episodes.}
+%     \label{fig:learning_curve_best}
+% \end{figure}
 
-
-
-\section{Discussion and Future Work}
-\subsection{Discussion}
-\subsection{Future work}
-The Achilles' heel of our solution is that the deep Q-learning agent did not perform as well as we hoped, 
+\section{Conclusion and Future work}
+Q-Learning turned out to be a robust method to find a reliable agent as was expected. Using 15 buckets for the state attributes is precise enough to
+control the bird, so that it only dies in "unforeseen" states, that is, states that the agent had not encountered that often. We assume that our agent
+will converge towards a perfect player of the game (i.e. bird never dies) as the number of episodes increase.
+\\
+The Achilles' heel of our solution is that the Deep Q-learning agent did not perform as well as we hoped, 
 after certain amount of episodes it converged to be a worse agent, this pattern can be seen in figure \ref{fig:learning_curves}.
 Due to this shortcoming the future work would consist of fixing this agent so it does not get worse over time. 
 As figure \ref{fig:learning_curves} depicts the Deep Q-learning agent shows some improvement trianing on only 2000 episodes but then it plumits after 3000 episodes to a average reward over 1 episode of around 0. 
@@ -181,15 +212,8 @@ As of now we dont know the reason why, we tried to troublshooting this (possibly
     \centering
     \includegraphics[width=0.5\textwidth]{ai_image.jpg}
     \caption{Created by \href{https://gemini.google.com/}{Google Gemini}}
-    \label{fig:learning_curves}
+    \label{fig:gemini}
 \end{figure}
-
-\clearpage
-
-\appendix
-\section*{Appendix}
-
-
 
 
 \end{document}

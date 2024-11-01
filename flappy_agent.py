@@ -259,9 +259,9 @@ def random_grid_search(num_trials, episodes_per_trial):
 
     for _ in range(num_trials):
         # sample hyperparameters randomly from defined ranges
-        learning_rate = random.uniform(0.01, 0.1)
-        discount_rate = random.uniform(0.9, 0.99)
-        greedy_eps = random.uniform(0.1, 1.0)
+        learning_rate = random.uniform(0.001, 0.5)
+        discount_rate = random.uniform(0.8, 0.99)
+        greedy_eps = random.uniform(0.01, 0.3)
 
         # creates and trains an agent with the sampled hyperparameters
         agent = FlappyAgentV1(discount_rate=discount_rate, learning_rate=learning_rate, greedy_eps=greedy_eps)
@@ -286,9 +286,9 @@ def random_grid_search(num_trials, episodes_per_trial):
     print(f"Best Average Score: {best_avg_score:.2f}")
     return best_hyperparams
 
-if __name__ == "__main__":
+def hypreparameter_tuning():
     # Example usage:
-    best_hyperparams = random_grid_search(num_trials=10, episodes_per_trial=1000) 
+    best_hyperparams = random_grid_search(num_trials=50, episodes_per_trial=5000) 
 
     training_episodes = 3000
 
@@ -321,4 +321,38 @@ if __name__ == "__main__":
     # (Optional) Display the game with the best agent
     input("Press any button to resume playing with the best Q-learning agent (training mode off)")
     run_game(5, best_q_agent, True) 
+
+if __name__ == "__main__":
+    q_agent = FlappyAgentV1(0.9503680823956757, 0.09630999745313518, 0.013745399559053649)
+    q_total_score = []
+    q_average_scores = []
+    runs = []
+
+    iteration = 1000
+    n_runs = 100
+    for i in range(10):
+        print(f"Running training - {iteration * i} episodes done")
+        train(iteration, q_agent)
+
+        q_scores = run_game(n_runs, q_agent)
+        q_total_score.append(q_scores)
+        q_average_scores.append(sum(q_scores)/len(q_scores))
+
+        total_training_episodes = iteration * (i + 1)
+        runs.append(total_training_episodes)
+
+    sns.set(style="darkgrid")
+    plt.figure(figsize=(12, 6))
+        
+    # Plot for Q-learning agent
+    sns.lineplot(x=runs, y=q_average_scores, label="Q-learning")  
+    
+    plt.xlabel("Training Episodes")
+    plt.ylabel(f"Average Reward over {n_runs} episodes")
+    plt.title('Learning Curves of Flappy Bird Agents')
+    plt.legend()  # Show the legend to identify the lines
+    plt.show()
+    
+    input("Q: Press any button to resume playing (training mode off)")
+    run_game(5, q_agent, True) 
 
