@@ -71,7 +71,7 @@ def run_game(nb_episodes, agent):
     """ Runs nb_episodes episodes of the game with agent picking the moves.
         An episode of FlappyBird ends with the bird crashing into a pipe or going off screen.
     """
-
+    
     reward_values = {"positive": 1.0, "negative": 0.0, "tick": 0.0, "loss": 0.0, "win": 0.0}
     # TODO: when training use the following instead:
     # reward_values = agent.reward_values

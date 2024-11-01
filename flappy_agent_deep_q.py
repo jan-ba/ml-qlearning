@@ -15,7 +15,8 @@ def run_game(nb_episodes, agent):
         An episode of FlappyBird ends with the bird crashing into a pipe or going off screen.
     """
 
-    reward_values = {"positive": 1.0, "negative": 0.0, "tick": 0.0, "loss": 0.0, "win": 0.0}
+    reward_values = {"positive": 1.0, "negative": -1.0, "tick": -0.01, "loss": -5.0, "win": 10.0}
+
     # TODO: when training use the following instead:
     # reward_values = agent.reward_values
     
@@ -171,7 +172,6 @@ class FlappyAgentV2(FlappyAgent):
             
             q_s1 = self.model.predict(s1_batch)
             q_s2 = self.target_model.predict(s2_batch)
-            print("q_s1[0]: ", q_s1[0])
 
 
             target_q_values = q_s1.copy()
@@ -186,11 +186,7 @@ class FlappyAgentV2(FlappyAgent):
                     print("UPDATE TARGET Q VALUES: ", target_q_values[i, a_batch[i]])
             # Partially fitting the model because its more memory efficient
             self.model.partial_fit(s1_batch, target_q_values)
-            print("JUST PARTIALLY FIT THE MODEL")
-            print("Min Q-value in q_s1:", np.min(q_s1), "Max Q-value in q_s1:", np.max(q_s1))
-            print("Min Q-value in q_s2:", np.min(q_s2), "Max Q-value in q_s2:", np.max(q_s2))
-
-       
+      
 
         # count the frames, so as to move the model into the target model after x steps
         if self.frame_counter >= self.MODEL_UPDATE_STEP:
@@ -240,7 +236,7 @@ class FlappyAgentV2(FlappyAgent):
 
 
 agent = FlappyAgentV2()
-train(4000, agent)
+train(2000, agent)
 input("Press any button to resume to playing (training mode off)")
 run_game(100, agent)
 
