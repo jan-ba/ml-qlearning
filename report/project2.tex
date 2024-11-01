@@ -49,7 +49,7 @@ In Flappy Bird you as the player play as a bird in a 2d environment where there 
 with each consecutive frame the pipes move closer to the bird, and your task is to locate the bird by flapping its wings to make it fit between these two pipes. 
 Flappy Bird is an interesting game to take on because it has a good balance between simplicity and challenge. 
 Q-learning algorithm uses a tabular structure to learn every single possible state of the game to then take the best possible action that it knows. 
-The deep-Q learning uses function approximation to estimate whats the best action depending on what state the game is in. 
+The Deep-Q learning uses function approximation to estimate whats the best action depending on what state the game is in. 
 
 \section{Problem Description}
 We were tasked with finding a sweetspot for the policy so that it would be as good as possible while involving as 
@@ -73,44 +73,89 @@ this does not make it stochastic from the agents point of view, but more about t
 
 FlappyBirds is an episodic game: An episode starts with the bird alive and ends once it dies. Starting another iteration is independent
 of the last one.
-
-
-
-Discuss the environment characteristics (discrete/continuous, finite/infinite, episodic/continuous), 
-what constitutes a state, and whether it is a Markov process. Mention the feasibility of using 
-Q-Learning or Deep Q-Learning and the challenges expected.
+For an agent, to make informed decisions a state of FlappyBirds should contain the position and velocity of the bird as well as the distance to
+and the height of the next pipe.
+Furthermore, the game can inherently be modelled as a Markovian process: Knowing the current state is sufficient to predict the (close) future
+and choose the next move. That is, if we know the status of our bird and the position of the next pipe, an agent can be able
+to maneuver without crashing, unknowing of previous pipes or ones that will come after. Knowing subsequent pipes is only 
+interesting for training to evalue future rewards.
 
 
 \section{Implementation of Q-Learning}
 \subsection{State Representation and Action Space}
-Explain the state representation used (e.g., player\_y, next\_pipe\_top\_y, next\_pipe\_dist\_to\_player, and player\_vel) and the action space (flap or do nothing).
 
+\noindent State variables that describe the current environment that the agent is in:
 \begin{itemize}
-    \item \textbf{player\_y}: The current vertical position of the bird.
-    \item \textbf{next\_pipe\_top\_y}: The position of the next top pipe.
-    \item \textbf{next\_pipe\_dist\_to\_player}: 
-    \item \textbf{player\_vel}: 
+    \item \textbf{player\_y}: The current vertical position of the bird
+    \item \textbf{next\_pipe\_top\_y}: The horizontal position of the next top pipe
+    \item \textbf{next\_pipe\_bottom\_y}: The horizontal position of the next bottom pipe
+    \item \textbf{next\_pipe\_dist\_to\_player}: The horizontal distance from the next pipe to the bird
+    \item \textbf{next\_next\_pipe\_top\_y}: The horizontal position of the top pipe after the next
+    \item \textbf{next\_next\_pipe\_bottom\_y}: The horizontal position of the bottom pipe after the next
+    \item \textbf{next\_next\_pipe\_dist\_to\_player}: The horizontal distance from the pipe to the bird after the next
+    \item \textbf{player\_vel}: The current velocity of the bird
 \end{itemize}
 
-\subsection{Q-Learning Algorithm}
-Provide details on the discretization of the state space, \(\epsilon\)-greedy policy, learning rate, and update rule. Mention how terminal states are handled.
+\noindent The actions that the agent can take:
+\begin{itemize}
+    \item \textbf{flap}: The agent can choose to flap the wings causing the bird to gain altitude
+    \item \textbf{no-flap}: The agent can choose to not flap the wings causing the bird to lose altitude
+\end{itemize}
 
-\section{Learning Curve Analysis}
-Include a plot of the learning curve and interpret the results. Discuss what the curve reveals about the performance and stability of the Q-Learning algorithm.
+\noindent For the Q-learning we opted to bin (discretesize) the values so that the q-table would not be insanely big. We split the space of these attributes (except the velocity) evenly
+into 15 intervals each, resulting in at most 64125 different states to consider (not all of those are reachable).
+
+\subsection{Q-Learning Algorithm}
+The core of Q-Learning is a table, that assigns a Q-value to each combination of state \(s\) and action \(a\). These values represent the expected future
+rewards for taking that action from that state. Training equals to constantly modifying the table, updating the Q-values. When training, Q-Learning chooses in a state
+the action that has the highest Q-value (\textit{exploitation}) or a random action (\textit{exploration}), as governed by a hyperparameter \(\epsilon\).
+Then it observes the next state \(s'\) and reward \(r\) to update the Q-table:
+$$
+Q(s, a) \leftarrow Q(s, a) + \alpha \left[ r + \gamma \max_{a'} Q(s', a') - Q(s, a) \right]
+$$
 
 \section{Implementation of Deep Q-Learning}
 \subsection{Model Setup}
 Explain the structure of the neural network, including the input normalization, hidden layers, output layer, and activation functions.
+The action space is the same as above for the Q-learning one but the state representation is not binned in this case but instead normalised using min-max normalization.
+The description stated a nice starting point, using two networks with hidden layers, 100 neurons in the first layer and 10 in the second layer. 
+These two networks will then be used in tandem to train the model.
 
-\subsection{Algorithm Details}
-Discuss the modifications for Deep Q-Learning, including the use of experience replay and the target network. Provide information about the update procedure and batch training.
+\subsection{Deep Q-Learning Algorithm}
+The algorithm uses the idea of Q-learning to determine Q-values for actions in state but it does not use a Q-table, it uses a deep neural network to approximate the Q-values.
+The deep neural network is then called a Deep-Q-Network. 
+The algorithm makes the use of a replay buffer that stores past observations, it breaks correlations and stabilizes training by learning from many past experiences. 
+The algorithm also makes use of a target network that gets replaced by the main network on a predefined interval, the traget network provides a stable Q-value to improve stability in training.
+Furthermore the algorithm uses batch sized sample from the replay buffer to update the Q-network.
 
-\subsection{Training and Evaluation}
-Explain how the training was conducted and include results with an analysis of the performance compared to the tabular Q-Learning approach.
 
 \section{Experimental Results and Analysis}
+\subsection{Learning Curve Analysis}
+We employed Learning Curve Analysis to compare Q-Learning and Deep Q-Learning. For this we incrementally trained the models
+for blocks of 1000 episodes, ran the trained policy / model up to that point on the game and averaged the scores. We then
+plotted these scores against the number of episodes to get an idea of how the quality of the policy develops over time / training
+episodes.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{training_deepq_vs_q_avg10samples.png}
+    \caption{Learning curves for Q-learning and Deep Q-learning agents in Flappy Bird. The average reward over 1 episode is plotted against the number of training episodes.}
+    \label{fig:learning_curves}
+\end{figure}
+
+From this, one can safely assume that the Q-Learning agent will become better as the training amount increases. However,
+for Deep Q-Learning the same could be expected but this is not indicidated by the plot. Assumingly, we would have to optimise the
+hyperparameters further. We decided not to do that and stick to Q-Learning for hyperparameter optimisation, so as to cater to time constraints we had.
+Q-Learning is quicker to train when only accessing CPU-power.
+
 \subsection{Parameter Tuning}
-Describe the experiments conducted with different parameter configurations (e.g., learning rate, \(\epsilon\), batch size). Include a discussion on how these parameters influenced learning speed and policy quality.
+
+\begin{itemize}
+    \item \textbf{Discount rate}: Determines how far ahead we look into the future in terms of the rewards i.e. how farsighted or nearsighted our agent is
+    \item \textbf{Learning rate}: Hyperparameter that controls how much value the agent treats our new information in contrast to the old Q-value in the table 
+    \item \textbf{Greedy epsilon}: This controls how much we exploit vs explore, can be from 0 to 1, the higher the epsilon the more we explore 
+\end{itemize}
+For the hyperparameter tuning we use random grid search to find the best combination of the parameters for the depp-q agent.
 
 \subsection{Best Performing Agent}
 Report on the best results obtained and analyze why this setup was effective.
@@ -123,40 +168,21 @@ Summarize the findings of the project, the parameters that influenced learning t
 
 
 \section{Discussion and Future Work}
+\subsection{Discussion}
+\subsection{Future work}
+The Achilles' heel of our solution is that the deep Q-learning agent did not perform as well as we hoped, 
+after certain amount of episodes it converged to be a worse agent, this pattern can be seen in figure \ref{fig:learning_curves}.
+Due to this shortcoming the future work would consist of fixing this agent so it does not get worse over time. 
+As figure \ref{fig:learning_curves} depicts the Deep Q-learning agent shows some improvement trianing on only 2000 episodes but then it plumits after 3000 episodes to a average reward over 1 episode of around 0. 
+As of now we dont know the reason why, we tried to troublshooting this (possibly spent too much time on that) but with no luck. 
+
 
 \clearpage
 
 \appendix
 \section*{Appendix}
 
-\begin{table}[h!]
-    \centering
-    \begin{tabularx}{\textwidth}{|l|X|}
-    \hline
-    \textbf{Feature} & \textbf{Description} \\ \hline
-    \textit{Age} & Coded in 13 age groups (e.g., 1: 18-24, 2: 25-29, etc.) \\ \hline
-    \textit{Sex} & Sex of the individual (0: Male, 1: Female) \\ \hline
-    \textit{HighChol} & High cholesterol (0: No, 1: Yes) \\ \hline
-    \textit{CholCheck} & Checked cholesterol in the last 5 years (0: No, 1: Yes) \\ \hline
-    \textit{BMI} & Body Mass Index (continuous variable) \\ \hline
-    \textit{Smoker} & Smoked at least 100 cigarettes in their lifetime (0: No, 1: Yes) \\ \hline
-    \textit{HeartDiseaseorAttack} & History of coronary heart disease or myocardial infarction (0: No, 1: Yes) \\ \hline
-    \textit{PhysActivity} & Engaged in physical activity in the past 30 days, excluding work (0: No, 1: Yes) \\ \hline
-    \textit{Fruits} & Consumes fruit 1 or more times per day (0: No, 1: Yes) \\ \hline
-    \textit{Veggies} & Consumes vegetables 1 or more times per day (0: No, 1: Yes) \\ \hline
-    \textit{HvyAlcoholConsump} & Heavy alcohol consumption (men: 14+ drinks/week, women: 7+ drinks/week) (0: No, 1: Yes) \\ \hline
-    \textit{GenHlth} & Self-reported general health (1: Excellent, 2: Very good, 3: Good, 4: Fair, 5: Poor) \\ \hline
-    \textit{MentHlth} & Days of poor mental health in the past 30 days (0 to 30) \\ \hline
-    \textit{PhysHlth} & Days of poor physical health in the past 30 days (0 to 30) \\ \hline
-    \textit{DiffWalk} & Difficulty walking or climbing stairs (0: No, 1: Yes) \\ \hline
-    \textit{Stroke} & History of stroke (0: No, 1: Yes) \\ \hline
-    \textit{HighBP} & High blood pressure (0: No, 1: Yes) \\ \hline
-    \textit{Diabetes} & Presence of diabetes (0: No, 1: Yes) \\ \hline
-    \end{tabularx}
-    \caption{Full list of dataset features used in the analysis.}
-    \label{tab:feature_list}
-\end{table}
 
-\printbibliography
+
 
 \end{document}
