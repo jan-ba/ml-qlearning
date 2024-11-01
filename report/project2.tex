@@ -60,7 +60,7 @@ that never dies in the game.
 However, this is obviously not feasible in reality. Hence, looking for a good-enough solution is very much motivated by
 how such problems would be tackled in the industry.
 
-\section{Characterization of the Environment}
+\section{Characterisation of the Environment}
 The environment techniqually is \textit{continuous} since for example the velocity of the bird or the coordinates of its whereabouts
 could be represented by float values. In practise, it is probably both \textit{discrete} and \textit{finite} as for the bird's position we can consider a 
 integer grid of pixels and the velocity may only take values from a countable and finite set of float values. Furthermore, the agent
@@ -103,7 +103,7 @@ interesting for training to evalue future rewards.
     \item \textbf{no-flap}: The agent can choose to not flap the wings causing the bird to lose altitude
 \end{itemize}
 
-\noindent For the Q-learning we opted to bin (discretesize) the values so that the q-table would not be insanely big. We split the space of these attributes (except the velocity) evenly
+\noindent For the Q-learning we opted to bin (discretise) the values so that the q-table would not be insanely big. We split the space of these attributes (except the velocity) evenly
 into 15 intervals each, resulting in at most 64125 different states to consider (not all of those are reachable).
 
 \subsection{Q-Learning Algorithm}
@@ -117,15 +117,15 @@ $$
 
 \section{Implementation of Deep Q-Learning}
 \subsection{Model Setup}
-Explain the structure of the neural network, including the input normalization, hidden layers, output layer, and activation functions.
-The action space is the same as above for the Q-learning one but the state representation is not binned in this case but instead normalised using min-max normalization.
+Explain the structure of the neural network, including the input normalisation, hidden layers, output layer, and activation functions.
+The action space is the same as above for the Q-learning one but the state representation is not binned in this case but instead normalised using min-max normalisation.
 The description stated a nice starting point, using two networks with hidden layers, 100 neurons in the first layer and 10 in the second layer. 
 These two networks will then be used in tandem to train the model.
 
 \subsection{Deep Q-Learning Algorithm}
 The algorithm uses the idea of Q-learning to determine Q-values for actions in state but it does not use a Q-table, it uses a deep neural network to approximate the Q-values.
 The deep neural network is then called a Deep-Q-Network. 
-The algorithm makes the use of a replay buffer that stores past observations, it breaks correlations and stabilizes training by learning from many past experiences. 
+The algorithm makes the use of a replay buffer that stores past observations, it breaks correlations and stabilises training by learning from many past experiences. 
 The algorithm also makes use of a target network that gets replaced by the main network on a predefined interval, the traget network provides a stable Q-value to improve stability in training.
 Furthermore the algorithm uses batch sized sample from the replay buffer to update the Q-network.
 
@@ -177,24 +177,24 @@ hyperparameter combinations and trained each of the corresponding models on 2000
     \label{tab:best_hyperparams}
 \end{table}
 
-The best combination of hyperparameters we could find is shown in Table \ref{tab:best_hyperparams}. We then initialized a 
+The best combination of hyperparameters we could find is shown in Table \ref{tab:best_hyperparams}. We then initialised a 
 new agent with these settings and also an agent with default settings and trained both for 3000 episodes. The tuned agent 
 performed significantly better (see Figure \ref{fig:comparison.png}). After that, we trained our best agent for 10000 episodes, 
 tracking the progress by plotting the learning curve as can be seen in Figure \ref{fig:learning_curve_best}.
 
-% \begin{figure}[H]
-%     \centering
-%     \includegraphics[width=\textwidth]{training_deepq_vs_q_avg10samples.png}
-%     \caption{Comparison between average scores of 10 games between the tuned and the untuned agent.}
-%     \label{fig:comparison.png}
-% \end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{comparison.png}
+    \caption{Comparison between average scores of 10 games between the tuned and the untuned agent.}
+    \label{fig:comparison.png}
+\end{figure}
 
-% \begin{figure}[H]
-%     \centering
-%     \includegraphics[width=\textwidth]{training_deepq_vs_q_avg10samples.png}
-%     \caption{Learning curve of best tuned model on 10000 episodes.}
-%     \label{fig:learning_curve_best}
-% \end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{tuned_q_learning_10000.png}
+    \caption{Learning curve of best tuned model on 10000 episodes.}
+    \label{fig:learning_curve_best}
+\end{figure}
 
 \section{Conclusion and Future work}
 Q-Learning turned out to be a robust method to find a reliable agent as was expected. Using 15 buckets for the state attributes is precise enough to
@@ -211,7 +211,7 @@ As of now we dont know the reason why, we tried to troublshooting this (possibly
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.5\textwidth]{ai_image.jpg}
-    \caption{Created by \href{https://gemini.google.com/}{Google Gemini}}
+    \caption{FlappyBirds in Machine Learning - Created by \href{https://gemini.google.com/}{Google Gemini}}
     \label{fig:gemini}
 \end{figure}
 
