@@ -1,0 +1,129 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage[backend=biber, style=numeric, sorting=none]{biblatex}
+\usepackage{booktabs}
+\usepackage{colortbl}
+\usepackage{xcolor}
+\usepackage{caption} % For customising captions
+
+
+% Set the caption font size
+\captionsetup{font=small}
+
+
+\addbibresource{references.bib}
+
+\geometry{a4paper, left=25mm, right=25mm, top=25mm, bottom=25mm}
+\title{Project 2: Reinforcement Learning - Q-Learning and Deep Q-Learning}
+
+\author{Alexander Svarfdal Gudmundsson \and Jan Babin}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{center}  
+    \includegraphics[width=0.6\textwidth]{HR_logo.jpg}
+\end{center}
+
+\clearpage
+
+\tableofcontents
+
+\clearpage
+
+\section{Introduction}
+The main objective of this project is to apply Q-learning and Deep Q-learning to train an agent in a Flappy Bird game. 
+The reason why using reinforcement learning in the project is applicable is because we can make an agent run in an simulated environment, 
+even making the agent play at a much faster pace than in real time. 
+In Flappy Bird you as the player play as a bird in a 2d environment where there are two pipes that appear to the right of the screen one coming from above and one coming from the top, 
+with each consecutive frame the pipes move closer to the bird, and your task is to locate the bird by flapping its wings to make it fit between these two pipes. 
+Flappy Bird is an interesting game to take on because it has a good balance between simplicity and challenge. 
+
+\section{Problem Description}
+Describe the problem, including the specific objectives: achieving the best policy and learning a policy as quickly as possible. Discuss any trade-offs involved in the process.
+
+\section{Characterization of the Environment}
+Discuss the environment characteristics (discrete/continuous, finite/infinite, episodic/continuous), what constitutes a state, and whether it is a Markov process. Mention the feasibility of using Q-Learning or Deep Q-Learning and the challenges expected.
+
+\section{Implementation of Q-Learning}
+\subsection{State Representation and Action Space}
+Explain the state representation used (e.g., player\_y, next\_pipe\_top\_y, next\_pipe\_dist\_to\_player, and player\_vel) and the action space (flap or do nothing).
+
+\subsection{Q-Learning Algorithm}
+Provide details on the discretization of the state space, \(\epsilon\)-greedy policy, learning rate, and update rule. Mention how terminal states are handled.
+
+\section{Learning Curve Analysis}
+Include a plot of the learning curve and interpret the results. Discuss what the curve reveals about the performance and stability of the Q-Learning algorithm.
+
+\section{Implementation of Deep Q-Learning}
+\subsection{Model Setup}
+Explain the structure of the neural network, including the input normalization, hidden layers, output layer, and activation functions.
+
+\subsection{Algorithm Details}
+Discuss the modifications for Deep Q-Learning, including the use of experience replay and the target network. Provide information about the update procedure and batch training.
+
+\subsection{Training and Evaluation}
+Explain how the training was conducted and include results with an analysis of the performance compared to the tabular Q-Learning approach.
+
+\section{Experimental Results and Analysis}
+\subsection{Parameter Tuning}
+Describe the experiments conducted with different parameter configurations (e.g., learning rate, \(\epsilon\), batch size). Include a discussion on how these parameters influenced learning speed and policy quality.
+
+\subsection{Best Performing Agent}
+Report on the best results obtained and analyze why this setup was effective.
+
+\section{Conclusion}
+Summarize the findings of the project, the parameters that influenced learning the most, and potential future improvements.
+
+
+
+
+
+\section{Discussion and Future Work}
+
+\clearpage
+
+\appendix
+\section*{Appendix}
+
+\begin{table}[h!]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|X|}
+    \hline
+    \textbf{Feature} & \textbf{Description} \\ \hline
+    \textit{Age} & Coded in 13 age groups (e.g., 1: 18-24, 2: 25-29, etc.) \\ \hline
+    \textit{Sex} & Sex of the individual (0: Male, 1: Female) \\ \hline
+    \textit{HighChol} & High cholesterol (0: No, 1: Yes) \\ \hline
+    \textit{CholCheck} & Checked cholesterol in the last 5 years (0: No, 1: Yes) \\ \hline
+    \textit{BMI} & Body Mass Index (continuous variable) \\ \hline
+    \textit{Smoker} & Smoked at least 100 cigarettes in their lifetime (0: No, 1: Yes) \\ \hline
+    \textit{HeartDiseaseorAttack} & History of coronary heart disease or myocardial infarction (0: No, 1: Yes) \\ \hline
+    \textit{PhysActivity} & Engaged in physical activity in the past 30 days, excluding work (0: No, 1: Yes) \\ \hline
+    \textit{Fruits} & Consumes fruit 1 or more times per day (0: No, 1: Yes) \\ \hline
+    \textit{Veggies} & Consumes vegetables 1 or more times per day (0: No, 1: Yes) \\ \hline
+    \textit{HvyAlcoholConsump} & Heavy alcohol consumption (men: 14+ drinks/week, women: 7+ drinks/week) (0: No, 1: Yes) \\ \hline
+    \textit{GenHlth} & Self-reported general health (1: Excellent, 2: Very good, 3: Good, 4: Fair, 5: Poor) \\ \hline
+    \textit{MentHlth} & Days of poor mental health in the past 30 days (0 to 30) \\ \hline
+    \textit{PhysHlth} & Days of poor physical health in the past 30 days (0 to 30) \\ \hline
+    \textit{DiffWalk} & Difficulty walking or climbing stairs (0: No, 1: Yes) \\ \hline
+    \textit{Stroke} & History of stroke (0: No, 1: Yes) \\ \hline
+    \textit{HighBP} & High blood pressure (0: No, 1: Yes) \\ \hline
+    \textit{Diabetes} & Presence of diabetes (0: No, 1: Yes) \\ \hline
+    \end{tabularx}
+    \caption{Full list of dataset features used in the analysis.}
+    \label{tab:feature_list}
+\end{table}
+
+\printbibliography
+
+\end{document}
