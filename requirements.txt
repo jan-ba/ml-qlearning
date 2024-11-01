@@ -1,6 +1,5 @@
-pandas
 seaborn
-scikit-learn
+sklearn
+numpy
 matplotlib
-pycaret
-ipykernel
+pygame

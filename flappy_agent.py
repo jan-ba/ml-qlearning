@@ -17,7 +17,6 @@ class GameState(TypedDict):
     next_next_pipe_top_y: int
     next_next_pipe_bottom_y: int
 
-# Lecture 17, slide 38 for deep q learning
 
 class FlappyAgent:
     def __init__(self):
