@@ -50,10 +50,34 @@ with each consecutive frame the pipes move closer to the bird, and your task is 
 Flappy Bird is an interesting game to take on because it has a good balance between simplicity and challenge. 
 
 \section{Problem Description}
-Describe the problem, including the specific objectives: achieving the best policy and learning a policy as quickly as possible. Discuss any trade-offs involved in the process.
+We were tasked with finding a sweetspot for the policy so that it would be as good as possible while involving as 
+little game simulations as
+possible. For our problem, having unlimited training episodes should (at least for q-learning) result in convergence towards an agent 
+that never dies in the game.
+However, this is obviously not feasible in reality. Hence, looking for a good-enough solution is very much motivated by
+how such problems would be tackled in the industry.
 
 \section{Characterization of the Environment}
-Discuss the environment characteristics (discrete/continuous, finite/infinite, episodic/continuous), what constitutes a state, and whether it is a Markov process. Mention the feasibility of using Q-Learning or Deep Q-Learning and the challenges expected.
+The environment techniqually is \textit{continuous} since for example the velocity of the bird or the coordinates of its whereabouts
+could be represented by float values. In practise, it is probably both \textit{discrete} and \textit{finite} as for the bird's position we can consider a 
+integer grid of pixels and the velocity may only take values from a countable and finite set of float values. Furthermore, the agent
+may only choose from two possible actions for every state: to flap or not to flap - that is the question.
+
+The game is largely deterministic, with the bird's movements being accurately predictable as well as the pipes' behaviour once they have
+appeard.
+However, there is obviously some \textit{stochasticity} involved in their generation: 
+The location of newly spawned pipes is random. Still, one could argue
+this does not make it stochastic from the agents point of view, but more about that in the following sections.
+
+FlappyBirds is an episodic game: An episode starts with the bird alive and ends once it dies. Starting another iteration is independent
+of the last one.
+
+
+
+Discuss the environment characteristics (discrete/continuous, finite/infinite, episodic/continuous), 
+what constitutes a state, and whether it is a Markov process. Mention the feasibility of using 
+Q-Learning or Deep Q-Learning and the challenges expected.
+
 
 \section{Implementation of Q-Learning}
 \subsection{State Representation and Action Space}
