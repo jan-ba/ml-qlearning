@@ -249,7 +249,7 @@ class FlappyAgentV2(FlappyAgent):
         self.target_model.intercepts_ = deepcopy(self.model.intercepts_)
 
 
-if __name__ == "__main__":
+def compare_basic_deep_q_and_q():
     deepq_agent = FlappyAgentV2()
     q_agent = FlappyAgentV1()
     deepq_total_score = []
@@ -258,7 +258,7 @@ if __name__ == "__main__":
     q_average_scores = []
     runs = []
 
-    iteration = 100
+    iteration = 1000
     n_runs = 1
     for i in range(10):
         print(f"Running training - {iteration * i} episodes done")
@@ -295,4 +295,43 @@ if __name__ == "__main__":
     run_game(5, deepq_agent, True) 
     input("Q: Press any button to resume playing (training mode off)")
     run_game(5, q_agent, True) 
+
+if __name__ == "__main__":
+    deepq_agent = FlappyAgentV2()
+    # deepq_agent.EPSILON_DECAY_RATE = 0.01
+    # deepq_agent.MIN_EPSILON = 0.01
+    deepq_total_score = []
+    q_total_score = []
+    deepq_average_scores = []
+    q_average_scores = []
+    runs = []
+
+    iteration = 300
+    n_runs = 1
+    for i in range(10):
+        print(f"Running training - {iteration * i} episodes done")
+        train(iteration, deepq_agent)
+
+        deepq_scores = run_game(n_runs, deepq_agent)
+        deepq_total_score.append(deepq_scores)
+        deepq_average_scores.append(sum(deepq_scores)/len(deepq_scores))
+
+       
+        total_training_episodes = iteration * (i + 1)
+        runs.append(total_training_episodes)
+
+    sns.set(style="darkgrid")
+    plt.figure(figsize=(12, 6))
+    
+    # Plot for Deep Q-learning agent
+    sns.lineplot(x=runs, y=deepq_average_scores, label="Deep Q-learning") 
+        
+    plt.xlabel("Training Episodes")
+    plt.ylabel(f"Average Reward over {n_runs} episodes")
+    plt.title('Learning Curves of Flappy Bird Agents')
+    plt.legend()  # Show the legend to identify the lines
+    plt.show()
+    
+    input("DEEPQ: Press any button to resume playing (training mode off)")
+    run_game(5, deepq_agent, True) 
 

@@ -43,11 +43,13 @@
 
 \section{Introduction}
 The main objective of this project is to apply Q-learning and Deep Q-learning to train an agent in a Flappy Bird game. 
-The reason why using reinforcement learning in the project is applicable is because we can make an agent run in an simulated environment, 
+The reason why reinforcement learning is applicable is because we can make an agent run in an simulated environment, 
 even making the agent play at a much faster pace than in real time. 
 In Flappy Bird you as the player play as a bird in a 2d environment where there are two pipes that appear to the right of the screen one coming from above and one coming from the top, 
 with each consecutive frame the pipes move closer to the bird, and your task is to locate the bird by flapping its wings to make it fit between these two pipes. 
 Flappy Bird is an interesting game to take on because it has a good balance between simplicity and challenge. 
+Q-learning algorithm uses a tabular structure to learn every single possible state of the game to then take the best possible action that it knows. 
+The deep-Q learning uses function approximation to estimate whats the best action depending on what state the game is in. 
 
 \section{Problem Description}
 Describe the problem, including the specific objectives: achieving the best policy and learning a policy as quickly as possible. Discuss any trade-offs involved in the process.
@@ -58,6 +60,13 @@ Discuss the environment characteristics (discrete/continuous, finite/infinite, e
 \section{Implementation of Q-Learning}
 \subsection{State Representation and Action Space}
 Explain the state representation used (e.g., player\_y, next\_pipe\_top\_y, next\_pipe\_dist\_to\_player, and player\_vel) and the action space (flap or do nothing).
+
+\begin{itemize}
+    \item \textbf{player\_y}: The current vertical position of the bird.
+    \item \textbf{next\_pipe\_top\_y}: The position of the next top pipe.
+    \item \textbf{next\_pipe\_dist\_to\_player}: 
+    \item \textbf{player\_vel}: 
+\end{itemize}
 
 \subsection{Q-Learning Algorithm}
 Provide details on the discretization of the state space, \(\epsilon\)-greedy policy, learning rate, and update rule. Mention how terminal states are handled.
