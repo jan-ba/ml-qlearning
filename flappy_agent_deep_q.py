@@ -5,21 +5,22 @@ import random
 import numpy as np
 from typing import TypedDict
 from sklearn.neural_network import MLPRegressor
-from flappy_agent import FlappyAgent, GameState
+from flappy_agent import FlappyAgent, GameState, FlappyAgentV1
 from copy import deepcopy
 import seaborn as sns
 import matplotlib.pyplot as plt
 
 # Lecture 17, slide 38 for deep q learning
 
-def run_game(nb_episodes, agent):
+def run_game(nb_episodes, agent, show_screen=False):
     """ Runs nb_episodes episodes of the game with agent picking the moves.
         An episode of FlappyBird ends with the bird crashing into a pipe or going off screen.
     """
     total_rewards_for_each_episodes = []
-    reward_values = {"positive": 1.0, "negative": -1.0, "tick": -0.01, "loss": -5.0, "win": 10.0}
+    # reward_values = {"positive": 1.0, "negative": -1.0, "tick": -0.01, "loss": -5.0, "win": 10.0}
+    reward_values = {"positive": 1.0, "negative": 0.0, "tick": 0.0, "loss": 0.0, "win": 0.0}
     
-    env = PLE(FlappyBird(), fps=30, display_screen=False, force_fps=True, rng=None,
+    env = PLE(FlappyBird(), fps=30, display_screen=show_screen, force_fps=not show_screen, rng=None,
             reward_values = reward_values)
     env.init()
 
@@ -30,7 +31,7 @@ def run_game(nb_episodes, agent):
 
         # step the environment
         reward = env.act(env.getActionSet()[action])
-        print("reward=%d" % reward)
+        # print("reward=%d" % reward)
 
         score += reward
         
@@ -60,8 +61,8 @@ def train(nb_episodes, agent):
 
         # step the environment
         reward = env.act(env.getActionSet()[action])
-        print("reward=%d" % reward)
-        print("episode left: ", nb_episodes)
+        # print("reward=%d" % reward)
+        # print("episode left: ", nb_episodes)
 
         # let the agent observe the current state transition
         newState = env.game.getGameState()
@@ -71,7 +72,7 @@ def train(nb_episodes, agent):
 
         # reset the environment if the game is over
         if env.game_over():
-            print("score for this episode: %d" % score)
+            # print("score for this episode: %d" % score)
             episode_rewards.append(score)
             env.reset_game()
             nb_episodes -= 1
@@ -177,9 +178,9 @@ class FlappyAgentV2(FlappyAgent):
             # Convert to Numpy for efficiency
             s1_batch = np.array(s1_batch)
             a_batch = np.array(a_batch)
-            r_batch = np.array(r_batch).reshape(-1, 1)  # gets an array of arrays, supposedly required for fitting function
+            r_batch = np.array(r_batch)#.reshape(-1, 1)  # gets an array of arrays, supposedly required for fitting function
             s2_batch = np.array(s2_batch)
-            end_batch = np.array(end_batch).reshape(-1, 1)  
+            end_batch = np.array(end_batch)#.reshape(-1, 1)  
             
             q_s1 = self.model.predict(s1_batch)
             q_s2 = self.target_model.predict(s2_batch)
@@ -187,7 +188,7 @@ class FlappyAgentV2(FlappyAgent):
 
             target_q_values = q_s1.copy()
             # Taking the maximum expected benefit of future state (Q learning), also ensuring the right format for the for loop later
-            max_q_values_s2 = np.max(q_s2, axis=1).reshape(-1,1)
+            max_q_values_s2 = np.max(q_s2, axis=1)#.reshape(-1,1)
 
             for i in range(self.BATCH_SIZE):
                 if end_batch[i]:  # if state is terminal, use reward only
@@ -200,10 +201,14 @@ class FlappyAgentV2(FlappyAgent):
 
         # count the frames, so as to move the model into the target model after x steps
         if self.frame_counter >= self.MODEL_UPDATE_STEP:
-            print(f"UPDATE TARGET MODEL, frame counter is {self.frame_counter}")
+            # print(f"UPDATE TARGET MODEL, frame counter is {self.frame_counter}")
             self.update_target_model()
             self.frame_counter = 0
         else: self.frame_counter += 1
+
+        if self.frame_counter % self.EPSILON_DECAY_STEP == 0:
+            self.E_GREEDY_EPSILON = max(self.MIN_EPSILON, self.E_GREEDY_EPSILON - self.EPSILON_DECAY_RATE)
+
 
     def training_policy(self, state):
         """ Returns the index of the action that should be done in state while training the agent.
@@ -245,28 +250,49 @@ class FlappyAgentV2(FlappyAgent):
 
 
 if __name__ == "__main__":
-    agent = FlappyAgentV2()
-    total_score = []
-    iteration = 2000
+    deepq_agent = FlappyAgentV2()
+    q_agent = FlappyAgentV1()
+    deepq_total_score = []
+    q_total_score = []
+    deepq_average_scores = []
+    q_average_scores = []
+    runs = []
+
+    iteration = 100
+    n_runs = 1
     for i in range(10):
-        train(iteration, agent)
-        scores = run_game(100, agent)
-        total_score.append(scores)
+        print(f"Running training - {iteration * i} episodes done")
+        train(iteration, deepq_agent)
+        train(iteration, q_agent)
 
-    average_scores = []
-    runs = 0
-    for scores in total_score:
-        average_scores.append(sum(scores)/len(scores))
-        runs +=iteration
+        deepq_scores = run_game(n_runs, deepq_agent)
+        deepq_total_score.append(deepq_scores)
+        deepq_average_scores.append(sum(deepq_scores)/len(deepq_scores))
 
+        q_scores = run_game(n_runs, q_agent)
+        q_total_score.append(q_scores)
+        q_average_scores.append(sum(q_scores)/len(q_scores))
+
+        total_training_episodes = iteration * (i + 1)
+        runs.append(total_training_episodes)
 
     sns.set(style="darkgrid")
     plt.figure(figsize=(12, 6))
-    sns.lineplot(x=runs, y=average_scores)
-    plt.xlabel("Run")
-    plt.ylabel(f"Average Reward per {iteration}")
-    plt.title('Learning Curve of Flappy Bird Agent')
+    
+    # Plot for Deep Q-learning agent
+    sns.lineplot(x=runs, y=deepq_average_scores, label="Deep Q-learning") 
+    
+    # Plot for Q-learning agent
+    sns.lineplot(x=runs, y=q_average_scores, label="Q-learning")  
+    
+    plt.xlabel("Training Episodes")
+    plt.ylabel(f"Average Reward over {n_runs} episodes")
+    plt.title('Learning Curves of Flappy Bird Agents')
+    plt.legend()  # Show the legend to identify the lines
     plt.show()
-    input("Press any button to resume to playing (training mode off)")
-    run_game(100, agent)
+    
+    input("DEEPQ: Press any button to resume playing (training mode off)")
+    run_game(5, deepq_agent, True) 
+    input("Q: Press any button to resume playing (training mode off)")
+    run_game(5, q_agent, True) 
 

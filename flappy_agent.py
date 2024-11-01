@@ -239,7 +239,7 @@ class FlappyAgentV1(FlappyAgent):
         next next pipe top y position
         next next pipe bottom y position
         """
-        print(f"state: {state}")
+        # print(f"state: {state}")
         actions = self.q_table[self.get_q_table_key(state)]
         return 0 if actions[0] >= actions[1] else 1
 
