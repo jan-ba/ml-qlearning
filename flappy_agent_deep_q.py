@@ -5,79 +5,12 @@ import random
 import numpy as np
 from typing import TypedDict
 from sklearn.neural_network import MLPRegressor
-from flappy_agent import FlappyAgent, GameState, FlappyAgentV1
+from flappy_agent import FlappyAgent, GameState, FlappyAgentV1, run_game, train
 from copy import deepcopy
 import seaborn as sns
 import matplotlib.pyplot as plt
 
 # Lecture 17, slide 38 for deep q learning
-
-def run_game(nb_episodes, agent, show_screen=False):
-    """ Runs nb_episodes episodes of the game with agent picking the moves.
-        An episode of FlappyBird ends with the bird crashing into a pipe or going off screen.
-    """
-    total_rewards_for_each_episodes = []
-    # reward_values = {"positive": 1.0, "negative": -1.0, "tick": -0.01, "loss": -5.0, "win": 10.0}
-    reward_values = {"positive": 1.0, "negative": 0.0, "tick": 0.0, "loss": 0.0, "win": 0.0}
-    
-    env = PLE(FlappyBird(), fps=30, display_screen=show_screen, force_fps=not show_screen, rng=None,
-            reward_values = reward_values)
-    env.init()
-
-    score = 0
-    while nb_episodes > 0:
-        # pick greedy action
-        action = agent.policy(env.game.getGameState())
-
-        # step the environment
-        reward = env.act(env.getActionSet()[action])
-        # print("reward=%d" % reward)
-
-        score += reward
-        
-        # reset the environment if the game is over
-        if env.game_over():
-            print("score for this episode: %d" % score)
-            total_rewards_for_each_episodes.append(score)
-            env.reset_game()
-            nb_episodes -= 1
-            score = 0
-    
-    return total_rewards_for_each_episodes
-
-def train(nb_episodes, agent):
-    reward_values = agent.reward_values()
-    
-    env = PLE(FlappyBird(), fps=30, display_screen=False, force_fps=True, rng=None,
-            reward_values = reward_values)
-    env.init()
-
-    score = 0
-    episode_rewards = []
-    while nb_episodes > 0:
-        # pick an action
-        state = env.game.getGameState()
-        action = agent.training_policy(state)
-
-        # step the environment
-        reward = env.act(env.getActionSet()[action])
-        # print("reward=%d" % reward)
-        # print("episode left: ", nb_episodes)
-
-        # let the agent observe the current state transition
-        newState = env.game.getGameState()
-        agent.observe(state, action, reward, newState, env.game_over())
-
-        score += reward
-
-        # reset the environment if the game is over
-        if env.game_over():
-            # print("score for this episode: %d" % score)
-            episode_rewards.append(score)
-            env.reset_game()
-            nb_episodes -= 1
-            score = 0
-    return episode_rewards
 
 class FlappyAgentV2(FlappyAgent):
     def __init__(self):

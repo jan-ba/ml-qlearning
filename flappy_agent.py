@@ -4,6 +4,8 @@ from ple import PLE
 import random
 import numpy as np
 from typing import TypedDict
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 class GameState(TypedDict):
     player_y: int
@@ -67,41 +69,38 @@ class FlappyAgent:
         # At the moment we just return an action uniformly at random.
         return random.randint(0, 1) 
 
-def run_game(nb_episodes, agent):
+def run_game(nb_episodes, agent, show_screen=False):
     """ Runs nb_episodes episodes of the game with agent picking the moves.
         An episode of FlappyBird ends with the bird crashing into a pipe or going off screen.
     """
-    
+    total_rewards_for_each_episodes = []
+    # reward_values = {"positive": 1.0, "negative": -1.0, "tick": -0.01, "loss": -5.0, "win": 10.0}
     reward_values = {"positive": 1.0, "negative": 0.0, "tick": 0.0, "loss": 0.0, "win": 0.0}
-    # TODO: when training use the following instead:
-    # reward_values = agent.reward_values
     
-    env = PLE(FlappyBird(), fps=30, display_screen=True, force_fps=False, rng=None,
+    env = PLE(FlappyBird(), fps=30, display_screen=show_screen, force_fps=not show_screen, rng=None,
             reward_values = reward_values)
-    # TODO: to speed up training change parameters of PLE as follows:
-    # display_screen=False, force_fps=True 
     env.init()
 
     score = 0
     while nb_episodes > 0:
-        # pick an action
-        # TODO: for training using agent.training_policy instead
+        # pick greedy action
         action = agent.policy(env.game.getGameState())
 
         # step the environment
         reward = env.act(env.getActionSet()[action])
-        print("reward=%d" % reward)
-
-        # TODO: for training let the agent observe the current state transition
+        # print("reward=%d" % reward)
 
         score += reward
         
         # reset the environment if the game is over
         if env.game_over():
             print("score for this episode: %d" % score)
+            total_rewards_for_each_episodes.append(score)
             env.reset_game()
             nb_episodes -= 1
             score = 0
+    
+    return total_rewards_for_each_episodes
 
 def train(nb_episodes, agent):
     reward_values = agent.reward_values()
@@ -111,6 +110,7 @@ def train(nb_episodes, agent):
     env.init()
 
     score = 0
+    episode_rewards = []
     while nb_episodes > 0:
         # pick an action
         state = env.game.getGameState()
@@ -118,28 +118,30 @@ def train(nb_episodes, agent):
 
         # step the environment
         reward = env.act(env.getActionSet()[action])
-        print("reward=%d" % reward)
-        print("episode left: ", nb_episodes)
+        # print("reward=%d" % reward)
+        # print("episode left: ", nb_episodes)
 
         # let the agent observe the current state transition
         newState = env.game.getGameState()
         agent.observe(state, action, reward, newState, env.game_over())
 
         score += reward
+
         # reset the environment if the game is over
         if env.game_over():
-            print("score for this episode: %d" % score)
+            # print("score for this episode: %d" % score)
+            episode_rewards.append(score)
             env.reset_game()
             nb_episodes -= 1
             score = 0
-
+    return episode_rewards
 
 class FlappyAgentV1(FlappyAgent):
-    def __init__(self):
+    def __init__(self, discount_rate=1, learning_rate=0.1, greedy_eps=0.1):
         super().__init__()
-        self.DISCOUNT_RATE_GAMMA = 1
-        self.LEARNING_RATE_ALPHA = 0.1
-        self.E_GREEDY_EPSILON = 0.1
+        self.DISCOUNT_RATE_GAMMA = discount_rate
+        self.LEARNING_RATE_ALPHA = learning_rate
+        self.E_GREEDY_EPSILON = greedy_eps
         self.num_intervals = 15
         self.pixels_y = 512
         self.pixels_x = 288
@@ -244,10 +246,79 @@ class FlappyAgentV1(FlappyAgent):
         return 0 if actions[0] >= actions[1] else 1
 
 
-if __name__ == "__main__":
+def random_grid_search(num_trials, episodes_per_trial):
+    """
+    performs a random grid search for hyperparameter tuning.
 
-    agent = FlappyAgentV1()
-    train(1000, agent)
-    input("Press any button to resume to playing (training mode off)")
-    run_game(10, agent)
+        num_trials: The number of random trials to run.
+        episodes_per_trial: The number of episodes to train the agent for in each trial.
+    """
+
+    best_hyperparams = None
+    best_avg_score = float('-inf')
+
+    for _ in range(num_trials):
+        # sample hyperparameters randomly from defined ranges
+        learning_rate = random.uniform(0.01, 0.1)
+        discount_rate = random.uniform(0.9, 0.99)
+        greedy_eps = random.uniform(0.1, 1.0)
+
+        # creates and trains an agent with the sampled hyperparameters
+        agent = FlappyAgentV1(discount_rate=discount_rate, learning_rate=learning_rate, greedy_eps=greedy_eps)
+        episode_rewards = train(episodes_per_trial, agent)
+
+        # evaluate
+        avg_score = np.mean(episode_rewards)
+        print(f"Hyperparameters: learning_rate={learning_rate:.4f}, discount_rate={discount_rate:.4f}, greedy_eps={greedy_eps:.4f}")
+        print(f"Average score: {avg_score:.2f}")
+
+        # update best hyperparameters if the current agent performs better
+        if avg_score > best_avg_score:
+            best_avg_score = avg_score
+            best_hyperparams = {
+                "discount_rate": discount_rate,
+                "learning_rate": learning_rate,
+                "greedy_eps": greedy_eps
+            }
+
+    print("\nBest Hyperparameters:")
+    print(best_hyperparams)
+    print(f"Best Average Score: {best_avg_score:.2f}")
+    return best_hyperparams
+
+if __name__ == "__main__":
+    # Example usage:
+    best_hyperparams = random_grid_search(num_trials=10, episodes_per_trial=1000) 
+
+    training_episodes = 3000
+
+    print("\nTraining Q-learning agent with best hyperparameters:")
+    best_q_agent = FlappyAgentV1(**best_hyperparams)  # Q-agent with best params
+    best_q_episode_rewards = train(training_episodes, best_q_agent)  # train the best Q-agent
+
+    # train untuned Q-learning agent
+    print("\nTraining untuned Q-learning agent:")
+    untuned_q_agent = FlappyAgentV1()  # Create an untuned Q-agent
+    untuned_q_episode_rewards = train(training_episodes, untuned_q_agent)  # Train the untuned agent
+
+    n_runs = 10
+    best_q_scores = run_game(n_runs, best_q_agent)
+    untuned_q_scores = run_game(n_runs, untuned_q_agent)
+
+    # 5. Prepare data for plotting
+    agents = ["Best Q-learning", "Untuned Q-learning"]
+    average_scores = [np.mean(best_q_scores), np.mean(untuned_q_scores)]
+
+    # 6. Plot the results
+    sns.set(style="darkgrid")
+    plt.figure(figsize=(12, 6))
+    sns.barplot(x=agents, y=average_scores)
+    plt.xlabel("Agent")
+    plt.ylabel(f"Average Reward over {n_runs} episodes")
+    plt.title('Comparison of Flappy Bird Agents')
+    plt.show()
+
+    # (Optional) Display the game with the best agent
+    input("Press any button to resume playing with the best Q-learning agent (training mode off)")
+    run_game(5, best_q_agent, True) 
 
