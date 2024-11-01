@@ -259,9 +259,9 @@ def random_grid_search(num_trials, episodes_per_trial):
 
     for _ in range(num_trials):
         # sample hyperparameters randomly from defined ranges
-        learning_rate = random.uniform(0.001, 0.5)
-        discount_rate = random.uniform(0.8, 0.99)
-        greedy_eps = random.uniform(0.01, 0.3)
+        learning_rate = random.uniform(0.01, 0.1)
+        discount_rate = random.uniform(0.9, 0.99)
+        greedy_eps = random.uniform(0.01, 0.15)
 
         # creates and trains an agent with the sampled hyperparameters
         agent = FlappyAgentV1(discount_rate=discount_rate, learning_rate=learning_rate, greedy_eps=greedy_eps)
@@ -288,7 +288,7 @@ def random_grid_search(num_trials, episodes_per_trial):
 
 def hypreparameter_tuning():
     # Example usage:
-    best_hyperparams = random_grid_search(num_trials=50, episodes_per_trial=5000) 
+    best_hyperparams = random_grid_search(num_trials=20, episodes_per_trial=2000) 
 
     training_episodes = 3000
 
@@ -305,11 +305,10 @@ def hypreparameter_tuning():
     best_q_scores = run_game(n_runs, best_q_agent)
     untuned_q_scores = run_game(n_runs, untuned_q_agent)
 
-    # 5. Prepare data for plotting
     agents = ["Best Q-learning", "Untuned Q-learning"]
     average_scores = [np.mean(best_q_scores), np.mean(untuned_q_scores)]
 
-    # 6. Plot the results
+    # plot the results
     sns.set(style="darkgrid")
     plt.figure(figsize=(12, 6))
     sns.barplot(x=agents, y=average_scores)
