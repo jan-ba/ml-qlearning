@@ -44,7 +44,7 @@
 
 \section{Introduction}
 The main objective of this project is to apply Q-learning and Deep Q-learning to train an agent in a Flappy Bird game. 
-The reason why reinforcement learning is applicable is because we can make an agent run in an simulated environment, 
+The reason why reinforcement learning is applicable is because we can make an agent run in a simulated environment, 
 even making the agent play at a much faster pace than in real time. 
 In Flappy Bird you as the player play as a bird in a 2d environment where there are two pipes that appear to the right of the screen one coming from above and one coming from the top, 
 with each consecutive frame the pipes move closer to the bird, and your task is to locate the bird by flapping its wings to make it fit between these two pipes. 
@@ -88,11 +88,11 @@ interesting for training to evalue future rewards.
 \noindent State variables that describe the current environment that the agent is in:
 \begin{itemize}
     \item \textbf{player\_y}: The current vertical position of the bird
-    \item \textbf{next\_pipe\_top\_y}: The horizontal position of the next top pipe
-    \item \textbf{next\_pipe\_bottom\_y}: The horizontal position of the next bottom pipe
+    \item \textbf{next\_pipe\_top\_y}: The vertical position of the next top pipe
+    \item \textbf{next\_pipe\_bottom\_y}: The vertical position of the next bottom pipe
     \item \textbf{next\_pipe\_dist\_to\_player}: The horizontal distance from the next pipe to the bird
-    \item \textbf{next\_next\_pipe\_top\_y}: The horizontal position of the top pipe after the next
-    \item \textbf{next\_next\_pipe\_bottom\_y}: The horizontal position of the bottom pipe after the next
+    \item \textbf{next\_next\_pipe\_top\_y}: The vertical position of the top pipe after the next
+    \item \textbf{next\_next\_pipe\_bottom\_y}: The vertical position of the bottom pipe after the next
     \item \textbf{next\_next\_pipe\_dist\_to\_player}: The horizontal distance from the pipe to the bird after the next
     \item \textbf{player\_vel}: The current velocity of the bird
 \end{itemize}
@@ -117,17 +117,16 @@ $$
 
 \section{Implementation of Deep Q-Learning}
 \subsection{Model Setup}
-Explain the structure of the neural network, including the input normalisation, hidden layers, output layer, and activation functions.
-The action space is the same as above for the Q-learning one but the state representation is not binned in this case but instead normalised using min-max normalisation.
+The action space is the same as above for the Q-learning but the state representation is not binned in this case but instead normalised using min-max normalisation, the normalisation improves performance and helps with efficiency of the neural network.
 The description stated a nice starting point, using two networks with hidden layers, 100 neurons in the first layer and 10 in the second layer. 
 These two networks will then be used in tandem to train the model.
 
 \subsection{Deep Q-Learning Algorithm}
-The algorithm uses the idea of Q-learning to determine Q-values for actions in state but it does not use a Q-table, it uses a deep neural network to approximate the Q-values.
+The algorithm uses the idea of Q-learning to determine Q-values for actions in a state but it does not use a Q-table, it uses a deep neural network to approximate the Q-values.
 The deep neural network is then called a Deep-Q-Network. 
 The algorithm makes the use of a replay buffer that stores past observations, it breaks correlations and stabilises training by learning from many past experiences. 
 The algorithm also makes use of a target network that gets replaced by the main network on a predefined interval, the traget network provides a stable Q-value to improve stability in training.
-Furthermore the algorithm uses batch sized sample from the replay buffer to update the Q-network.
+Furthermore, the algorithm uses draws batches from the replay buffer to update the Q-network for efficiency reasons.
 
 
 \section{Experimental Results and Analysis}
@@ -140,11 +139,11 @@ episodes.
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{training_deepq_vs_q_avg10samples.png}
-    \caption{Learning curves for Q-learning and Deep Q-learning agents in Flappy Bird. The average reward over 1 episode is plotted against the number of training episodes.}
+    \caption{Learning curves for Q-learning and Deep Q-learning agents in Flappy Bird. The average reward over 10 episode is plotted against the number of training episodes.}
     \label{fig:learning_curves}
 \end{figure}
 
-From this, one can safely assume that the Q-Learning agent will become better as the training amount increases. However,
+Considering this, we assumed that the Q-Learning agent will become better as the training amount increases. However,
 for Deep Q-Learning the same could be expected but this is not indicidated by the plot. Assumingly, we would have to optimise the
 hyperparameters further. We decided not to do that and stick to Q-Learning for hyperparameter optimisation, so as to cater to time constraints we had.
 Q-Learning is quicker to train when only accessing CPU-power.
@@ -152,7 +151,7 @@ Q-Learning is quicker to train when only accessing CPU-power.
 \subsection{Parameter Tuning}
 
 \begin{itemize}
-    \item \textbf{Discount rate}: Determines how far ahead we look into the future in terms of the rewards i.e. how farsighted or nearsighted our agent is
+    \item \textbf{Discount rate}: Determines how far ahead we look into the future in terms of the rewards, i.e. how farsighted or nearsighted our agent is
     \item \textbf{Learning rate}: Hyperparameter that controls how much value the agent treats our new information in contrast to the old Q-value in the table 
     \item \textbf{Greedy epsilon}: This controls how much we exploit vs explore, can be from 0 to 1, the higher the epsilon the more we explore 
 \end{itemize}
@@ -162,7 +161,6 @@ hyperparameter combinations and trained each of the corresponding models on 2000
 \subsection{Best Performing Agent}
 \begin{table}[h]
     \centering
-    \caption{Best Hyperparameter Combination for Q-learning}
     \begin{tabular}{|c|c|}
         \hline
         Hyperparameter & Value \\
@@ -174,6 +172,7 @@ hyperparameter combinations and trained each of the corresponding models on 2000
         Exploration Rate (\(\epsilon\)) & 0.014 \\
         \hline
     \end{tabular}
+    \caption{Best Hyperparameter Combination for Q-learning}
     \label{tab:best_hyperparams}
 \end{table}
 
