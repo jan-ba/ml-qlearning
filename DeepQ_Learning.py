@@ -5,7 +5,7 @@ import random
 import numpy as np
 from typing import TypedDict
 from sklearn.neural_network import MLPRegressor
-from flappy_agent import FlappyAgent, GameState, FlappyAgentV1, run_game, train
+from Q_Learning import FlappyAgent, GameState, FlappyAgentV1, run_game, train
 from copy import deepcopy
 import seaborn as sns
 import matplotlib.pyplot as plt
